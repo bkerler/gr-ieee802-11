@@ -18,18 +18,19 @@
 #define INCLUDED_GR_IEEE802_11_OFDM_PARSE_MAC_H
 
 #include <gnuradio/ieee802_11/api.h>
-#include <gnuradio/gr_block.h>
+//#include <gnuradio/gr_block.h>
+#include <gras/block.hpp>
 
 namespace gr {
 namespace ieee802_11 {
 
-class GR_IEEE802_11_API ofdm_parse_mac : virtual public gr_block
+class GR_IEEE802_11_API ofdm_parse_mac : virtual public /*gr_block*/gras::Block
 {
 public:
 
 	typedef boost::shared_ptr<ofdm_parse_mac> sptr;
 	static sptr make(bool debug);
-
+	virtual void work(const InputItems &ins, const OutputItems &) {}
 };
 
 }  // namespace ieee802_11

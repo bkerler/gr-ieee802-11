@@ -84,6 +84,7 @@ set(GRC_BLOCKS_DIR      ${GR_PKG_DATA_DIR}/grc/blocks)
 ########################################################################
 find_package(Gruel)
 find_package(GnuradioCore)
+find_package(GRAS)
 
 if(NOT GRUEL_FOUND)
     message(FATAL_ERROR "Gruel required to compile IEEE802-15-4")
@@ -91,6 +92,10 @@ endif()
 
 if(NOT GNURADIO_CORE_FOUND)
     message(FATAL_ERROR "GnuRadio Core required to compile IEEE802-15-4")
+endif()
+
+if(NOT GRAS_FOUND)
+	message(FATAL_ERROR "GRAS required to compile IEEE802-15-4")
 endif()
 
 ########################################################################
@@ -102,6 +107,7 @@ include_directories(
     ${Boost_INCLUDE_DIRS}
     ${GRUEL_INCLUDE_DIRS}
     ${GNURADIO_CORE_INCLUDE_DIRS}
+	${GRAS_INCLUDE_DIRS}
 )
 
 link_directories(

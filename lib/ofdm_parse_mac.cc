@@ -17,8 +17,12 @@
 #include <gnuradio/ieee802_11/ofdm_parse_mac.h>
 #include "ofdm_parse_mac_impl.h"
 
-#include <gr_io_signature.h>
-#include <gr_block_detail.h>
+//#include <gr_io_signature.h>
+//#include <gr_block_detail.h>
+//#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
+#include <iostream>
+#include <iomanip>
 #include <string>
 
 using namespace gr::ieee802_11;
@@ -30,15 +34,16 @@ class ofdm_parse_mac_impl : public ofdm_parse_mac {
 public:
 
 ofdm_parse_mac_impl(bool debug) :
-		gr_block("ofdm_parse_mac",
-				gr_make_io_signature (0, 0, 0),
-				gr_make_io_signature (0, 0, 0)),
+		//gr_block("ofdm_parse_mac",
+		//		gr_make_io_signature (1, 1, sizeof(char)),
+		//		gr_make_io_signature (0, /*0*/1, /*0*/sizeof(char))),
+		gras::Block("ofdm_parse_mac_impl"),
 		d_debug(debug) {
 
-    message_port_register_out(pmt::mp("out"));
+    //message_port_register_out(pmt::mp("out"));
 
-    message_port_register_in(pmt::mp("in"));
-    set_msg_handler(pmt::mp("in"), boost::bind(&ofdm_parse_mac_impl::parse, this, _1));
+    //message_port_register_in(pmt::mp("in"));
+    //set_msg_handler(pmt::mp("in"), boost::bind(&ofdm_parse_mac_impl::parse, this, _1));
 }
 
 ~ofdm_parse_mac_impl() {
@@ -80,18 +85,36 @@ unsigned int crc32(const char *buf, int len) {
 	return update_crc32(0xffffffff, buf, len) ^ 0xffffffff;
 }
 
-void parse(pmt::pmt_t msg) {
+//int work (int noutput_items, gr_vector_const_void_star &input_items, gr_vector_void_star &output_items) {
+void work(const InputItems &ins, const OutputItems & output_items) {
+	//read the input message, and check it
+	const PMCC msg = this->pop_input_msg(0);
+	if (msg.is<gras::PacketMsg>()) {
+		//write the buffer into the socket
+		const gras::SBuffer &b = msg.as<gras::PacketMsg>().buff;
+		if (output_items.empty())
+			dout << "----------------- NOT OUTPUTING MSG -----------------" << std::endl;
+		parse(b, (not output_items.empty()));
+	}
+	else {
+		dout << "[" << name() << "<" << unique_id() << ">] work without message" << std::endl;
+	}
 
-	if(pmt::pmt_is_eof_object(msg)) {
+	//return noutput_items;
+}
+
+void parse(/*pmt::pmt_t msg*/const gras::SBuffer &b, bool output_msg) {
+
+	/*if(pmt::pmt_is_eof_object(msg)) {
 		message_port_pub(pmt::mp("out"), pmt::PMT_EOF);
 		detail().get()->set_done(true);
 		return;
 	}
 
-	assert(pmt::pmt_is_blob(msg));
+	assert(pmt::pmt_is_blob(msg));*/
 
-	int data_len = pmt::pmt_blob_length(msg);
-	mac_header *h = (mac_header*)pmt::pmt_blob_data(msg);
+	int data_len = /*pmt::pmt_blob_length(msg)*/b.length;
+	mac_header *h = (mac_header*)/*pmt::pmt_blob_data(msg)*/b.get();
 
 	dout << std::endl << "new mac frame  (length " << data_len << ")" << std::endl;
 	dout << "=========================================" << std::endl;
@@ -125,7 +148,7 @@ void parse(pmt::pmt_t msg) {
 			break;
 	}
 
-	bool crc = check_crc((char*)pmt::pmt_blob_data(msg), data_len);
+	bool crc = check_crc((char*)/*pmt::pmt_blob_data(msg)*/b.get(), data_len);
 	dout << "crc ";
 	dout << (crc ? "correct" : "wrong") << std::endl;
 
@@ -134,21 +157,45 @@ void parse(pmt::pmt_t msg) {
 		return;
 	}
 
-	char *frame = (char*)pmt::pmt_blob_data(msg);
+	char *frame = (char*)/*pmt::pmt_blob_data(msg)*/b.get();
 	frame[data_len - 4] = '\n';
 
 	// DATA
 	if((((h->frame_control) >> 2) & 63) == 2) {
-		print_ascii(frame + 24, data_len - 24 - 4);
-		pmt::pmt_t payload = pmt::pmt_make_blob(frame + 24, data_len - 24 - 3);
-
-		message_port_pub(pmt::mp("out"), pmt::pmt_cons(pmt::PMT_NIL, payload));
+		const int payload_len = data_len - 24 - 3;
+		print_ascii(frame + 24, payload_len - 1);
+		//pmt::pmt_t payload = pmt::pmt_make_blob(frame + 24, payload_len);
+		//message_port_pub(pmt::mp("out"), pmt::pmt_cons(pmt::PMT_NIL, payload));
+		
+		if (output_msg) {
+		//gras::SBuffer b = this->get_output_buffer(0);
+		//assert(b.get_actual_length() >= payload_len);
+		gras::SBufferConfig config;
+		config.length = payload_len;
+		gras::SBuffer b(config);
+		b.length = payload_len;
+		memcpy(b.get(), frame + 24, payload_len);
+		const gras::PacketMsg msg(b);
+		this->post_output_msg(0, PMC_M(msg));
+		}
 	// QoS Data
 	} else if((((h->frame_control) >> 2) & 63) == 34) {
-		print_ascii(frame + 26, data_len - 26 - 4);
-		pmt::pmt_t payload = pmt::pmt_make_blob(frame + 26, data_len - 26 - 3);
-
-		message_port_pub(pmt::mp("out"), pmt::pmt_cons(pmt::PMT_NIL, payload));
+		const int payload_len = data_len - 26 - 3;
+		print_ascii(frame + 26, payload_len - 1);
+		//pmt::pmt_t payload = pmt::pmt_make_blob(frame + 26, payload_len);
+		//message_port_pub(pmt::mp("out"), pmt::pmt_cons(pmt::PMT_NIL, payload));
+		
+		if (output_msg) {
+		//gras::SBuffer b = this->get_output_buffer(0);
+		//assert(b.get_actual_length() >= payload_len);
+		gras::SBufferConfig config;
+		config.length = payload_len;
+		gras::SBuffer b(config);
+		b.length = payload_len;
+		memcpy(b.get(), frame + 26, payload_len);
+		const gras::PacketMsg msg(b);
+		this->post_output_msg(0, PMC_M(msg));
+		}
 	}
 }
 
@@ -401,7 +448,8 @@ private:
 
 ofdm_parse_mac::sptr
 ofdm_parse_mac::make(bool debug) {
-	return gnuradio::get_initial_sptr(new ofdm_parse_mac_impl(debug));
+	//return gnuradio::get_initial_sptr(new ofdm_parse_mac_impl(debug));
+	return boost::make_shared<ofdm_parse_mac_impl>(debug);
 }
 
 

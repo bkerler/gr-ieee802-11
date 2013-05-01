@@ -175,12 +175,12 @@ class ofdm_decode_mac_impl : public ofdm_decode_mac {
 public:
 ofdm_decode_mac_impl(bool debug) : gr_block("ofdm_decode_mac",
 			gr_make_io_signature(1, 1, 48 * sizeof(gr_complex)),
-			gr_make_io_signature(0, 0, 0)),
+			gr_make_io_signature(0, /*0*/1, /*0*/sizeof(char))),
 			d_debug(debug),
 			ofdm(BPSK_1_2),
 			tx(ofdm, 0) {
 
-	message_port_register_out(pmt::mp("out"));
+	//message_port_register_out(pmt::mp("out"));
 }
 
 ~ofdm_decode_mac_impl(){
@@ -251,8 +251,24 @@ void decode() {
 	print_output();
 
 	// skip service field
-	pmt::pmt_t blob = pmt::pmt_make_blob(out_bytes + 2, tx.psdu_size);
-	message_port_pub(pmt::mp("out"), blob);
+	//pmt::pmt_t blob = pmt::pmt_make_blob(out_bytes + 2, tx.psdu_size);
+	//message_port_pub(pmt::mp("out"), blob);
+	
+	//grab the output buffer to pass downstream as a tag
+	//gras::SBuffer b = this->get_output_buffer(0);
+	//assert(b.get_actual_length() >= tx.psdu_size);
+	
+	gras::SBufferConfig config;
+	config.length = tx.psdu_size;
+	gras::SBuffer b(config);
+	
+	//receive into the buffer
+	b.length = tx.psdu_size;
+	memcpy(b.get(), out_bytes + 2, tx.psdu_size);
+	//create a message for this buffer
+	const gras::PacketMsg msg(b);
+	//post the output message downstream
+	this->post_output_msg(0, PMC_M(msg));
 }
 
 void demodulate() {

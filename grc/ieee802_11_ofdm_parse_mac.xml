@@ -25,12 +25,13 @@
 
 	<sink>
 		<name>in</name>
-		<type>message</type>
+		<type></type>
 	</sink>
 
 	<source>
 		<name>out</name>
-		<type>message</type>
+		<type></type>
+		<optional>1</optional>
 	</source>
 </block>
 
