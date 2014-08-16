@@ -18,7 +18,7 @@
 #define INCLUDED_GR_IEEE802_11_OFDM_DECODE_MAC_H
 
 #include <gnuradio/ieee802_11/api.h>
-#include <gnuradio/block.h>
+#include <gnuradio/gr_block.h>
 
 namespace gr {
 namespace ieee802_11 {

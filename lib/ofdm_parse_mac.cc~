@@ -125,7 +125,7 @@ void parse(pmt::pmt_t msg) {
 			break;
 	}
 
-	bool crc = check_crc((char*)pmt::blob_data(msg), data_len);
+	bool crc = check_crc((char*)pmt::pmt_blob_data(msg), data_len);
 	dout << "crc ";
 	dout << (crc ? "correct" : "wrong") << std::endl;
 
@@ -134,21 +134,21 @@ void parse(pmt::pmt_t msg) {
 		return;
 	}
 
-	char *frame = (char*)pmt::blob_data(msg);
+	char *frame = (char*)pmt::pmt_blob_data(msg);
 	frame[data_len - 4] = '\n';
 
 	// DATA
 	if((((h->frame_control) >> 2) & 63) == 2) {
 		print_ascii(frame + 24, data_len - 24 - 4);
-		pmt::pmt_t payload = pmt::make_blob(frame + 24, data_len - 24 - 3);
+		pmt::pmt_t payload = pmt::pmt_make_blob(frame + 24, data_len - 24 - 3);
 
-		message_port_pub(pmt::mp("out"), pmt::cons(pmt::PMT_NIL, payload));
+		message_port_pub(pmt::mp("out"), pmt::pmt_cons(pmt::PMT_NIL, payload));
 	// QoS Data
 	} else if((((h->frame_control) >> 2) & 63) == 34) {
 		print_ascii(frame + 26, data_len - 26 - 4);
-		pmt::pmt_t payload = pmt::make_blob(frame + 26, data_len - 26 - 3);
+		pmt::pmt_t payload = pmt::pmt_make_blob(frame + 26, data_len - 26 - 3);
 
-		message_port_pub(pmt::mp("out"), pmt::cons(pmt::PMT_NIL, payload));
+		message_port_pub(pmt::mp("out"), pmt::pmt_cons(pmt::PMT_NIL, payload));
 	}
 }
 

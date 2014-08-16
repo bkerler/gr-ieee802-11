@@ -251,7 +251,7 @@ void decode() {
 	print_output();
 
 	// skip service field
-	pmt::pmt_t blob = pmt::make_blob(out_bytes + 2, tx.psdu_size);
+	pmt::pmt_t blob = pmt::pmt_make_blob(out_bytes + 2, tx.psdu_size);
 	message_port_pub(pmt::mp("out"), blob);
 }
 

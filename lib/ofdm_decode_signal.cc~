@@ -37,7 +37,7 @@ ofdm_decode_signal_impl(bool debug) : gr::block("ofdm_decode_signal",
 
 	decoded_bits.set_size(24);
 	set_relative_rate(1);
-	set_tag_propagation_policy(gr::block::TPP_DONT);
+	set_tag_propagation_policy(gr_block::TPP_DONT);
 }
 
 ~ofdm_decode_signal_impl(){

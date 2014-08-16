@@ -14,27 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef INCLUDED_GR_IEEE802_11_OFDM_DECODE_MAC_H
-#define INCLUDED_GR_IEEE802_11_OFDM_DECODE_MAC_H
+#ifndef INCLUDED_GR_IEEE802_11_API_H
+#define INCLUDED_GR_IEEE802_11_API_H
 
-#include <gnuradio/ieee802_11/api.h>
-#include <gnuradio/block.h>
+#include <gruel/attributes.h>
 
-namespace gr {
-namespace ieee802_11 {
+#ifdef gnuradio_ieee802_11_EXPORTS
+#  define GR_IEEE802_11_API __GR_ATTR_EXPORT
+#else
+#  define GR_IEEE802_11_API __GR_ATTR_IMPORT
+#endif
 
-class GR_IEEE802_11_API ofdm_decode_mac : virtual public gr::block
-{
-public:
-
-	typedef boost::shared_ptr<ofdm_decode_mac> sptr;
-	static sptr make(bool debug = false);
-
-};
-
-}  // namespace ieee802_11
-}  // namespace gr
-
-#endif /* INCLUDED_GR_IEEE802_11_OFDM_DECODE_MAC_H */
-
-
+#endif /* INCLUDED_GR_IEEE802_11_API_H */

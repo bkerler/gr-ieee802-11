@@ -70,7 +70,7 @@ int general_work (int noutput, gr_vector_int& ninput_items,
 	if (d_tags.size()) {
 		std::sort(d_tags.begin(), d_tags.end(), gr::tag_t::offset_compare);
 
-		const gr::tag_t &tag = d_tags.front();
+		const gr_tag_t &tag = d_tags.front();
 		const uint64_t offset = tag.offset;
 
 		if(offset > nread) {
